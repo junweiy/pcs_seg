@@ -1,6 +1,6 @@
 # Volumetric Segmentation and Characterisation of the Paracingulate Sulcus on MRI Scans
 
-The implementation of my dissertation, the work is an extension of [pytorch-3dunet]([https://github.com/wolny/pytorch-3dunet](https://github.com/wolny/pytorch-3dunet)).
+The implementation of my dissertation, the work is an extension of [pytorch-3dunet](https://github.com/wolny/pytorch-3dunet).
 
 ## Getting Started
 
@@ -20,7 +20,9 @@ source activate 3dunet
 ```
 ## TL;DR
 Download the pre-trained coordinate detector and the segmentation network model:
+
 [Coordinate Detector](https://drive.google.com/file/d/1wV7utlnMamF_phVqkk4CAkidnPVDx7tQ/view?usp=sharing)
+
 [Segmentation Network](https://drive.google.com/file/d/1S4CvOQj3KNVaVfUroVk7M66jKbiEmX_q/view?usp=sharing)
 
 To predict on the NIfTI file, run `predict.py` with the following command:
