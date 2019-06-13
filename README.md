@@ -1,3 +1,4 @@
+
 # Volumetric Segmentation and Characterisation of the Paracingulate Sulcus on MRI Scans
 
 The implementation of my dissertation, the work is an extension of [pytorch-3dunet](https://github.com/wolny/pytorch-3dunet).
@@ -31,9 +32,10 @@ python predict.py --model-path ./seg.pytorch --cdmodel-path ./cd.pytorch --test-
 ```
 The command will create two masks for LH and RH in the path `./output/`.
 
-As a pretrained model is used, a dimension of 182 x 218 x 182 is required for the NIfTI file. Future features will be added to automatically resize the image as part of the data preparation process.
-
 ## Data Preparation
+### Data Preprocessing
+With a given scan, if the size does not match with the intended size, preprocessing can be performed. The script is available in `./datasets/align_acpc.py`. The scan is resampled to 192 x 224 x 192 and 1 x 1 x 1 mm voxel first, and is then aligned to the ACPC plane using a 6 DOF alignment via FSL commands based on the template file `./datasets/template.nii.gz`. The preprocessing step will be automatically performed during prediction, where the output segmentation mask will be based on the processed scan. However, for preparing the training data, the implemented function needs to be manually added to the conversion script mentioned in the upcoming section.
+
 ### Data Conversion
 NIfTI files need to be converted to HDF5 format first **for training**. An example can be found in `./datasets/h5_converter.py`, which can be executed to generate h5 file for all provided MRI scans. Similar conversion can be done by modifying the file to enable conversion on other files.
 
@@ -223,3 +225,5 @@ To simply generate NIfTI file of prediction:
 ```
 python predict.py --model-path ./seg.pytorch --cdmodel-path ./cd.pytorch --test-path ./file.nii.gz
 ```
+### IMPORTANT
+Image preprocessing is performed when the given NIfTI file has a mismatched dimension, along with the predicted segmentation mask for LH and RH, upon preprocessing the processed NIfTI scan file will also be generated in the output path.

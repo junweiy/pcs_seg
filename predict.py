@@ -5,6 +5,7 @@ import h5py
 import numpy as np
 import torch
 import nibabel as nib
+import cv2
 
 from torch import nn as nn
 
@@ -17,6 +18,7 @@ from unet3d.coor_model import CoorNet
 from unet3d.losses import DiceCoefficient
 
 from datasets.crop_window import generate_slice, recover_patch_4d, recover_patch, W, H, D
+from datasets.align_acpc import preprocess_nifti, AFF
 
 logger = utils.get_logger('UNet3DPredictor')
 
@@ -206,10 +208,9 @@ def main():
             if args.report_metrics:
                 raise ValueError("Cannot report metrics on original files.")
             # Temporary save as h5 file
-            img = nib.load(test_path)
-            data = np.array(img.get_fdata())
-            # Zero-padding if dim != 192 x 224 x 192
-            data = pad(data)
+            # Preprocess if dim != 192 x 224 x 192
+            data = preprocess_nifti(test_path, args.output_path)
+            logger.info('Preprocessing complete.')
             hf = h5py.File(test_path + '.h5', 'w')
             hf.create_dataset('raw', data=data)
             hf.close()
@@ -230,22 +231,18 @@ def main():
         # Perform segmentation
         probability_maps = predict(UNet_model, dataset, out_channels, device, x, y, z)
         res = np.argmax(probability_maps, axis=0)
+
         # Put the image batch back to mask with the original size
-        # res = recover_patch(res, x, y, z, dataset.raw.shape)
-        # TODO, need to hardcode for now
-        res = recover_patch(res, x, y, z, (182, 218, 182))
+        res = recover_patch(res, x, y, z, dataset.raw.shape)
 
         # Extract LH and RH segmentations and write as file
         LH = np.zeros(res.shape)
         LH[int(res.shape[0]/2):,:,:] = res[int(res.shape[0]/2):,:,:]
         RH = np.zeros(res.shape)
         RH[:int(res.shape[0]/2),:,:] = res[:int(res.shape[0]/2),:,:]
-        aff = np.array([[  -1.,    0.,    0.,   90.],
-                       [   0.,    1.,    0., -126.],
-                       [   0.,    0.,    1.,  -72.],
-                       [   0.,    0.,    0.,    1.]])
-        LH_img = nib.Nifti1Image(LH, aff)
-        RH_img = nib.Nifti1Image(RH, aff)
+        
+        LH_img = nib.Nifti1Image(LH, AFF)
+        RH_img = nib.Nifti1Image(RH, AFF)
         nib.save(LH_img, args.output_path + file_name + '_LH.nii.gz')
         nib.save(RH_img, args.output_path + file_name + '_RH.nii.gz')
         logger.info('File saved to ' + args.output_path + file_name + '_LH.nii.gz')
