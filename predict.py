@@ -153,9 +153,12 @@ def main():
                         help='Whether to print metrics for each prediction')
     parser.add_argument('--output-path', type=str, default='./output/',
                         help='The output path to generate the nifti file')
-    
 
     args = parser.parse_args()
+
+    # Check if output path exists
+    if not os.path.isdir(args.output_path):
+        os.mkdir(args.output_path)
 
     # make sure those values correspond to the ones used during training
     in_channels = args.in_channels
